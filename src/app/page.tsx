@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Github, Code, Bug, Lightbulb, FileText, Send, Sparkles, AlertCircle } from "lucide-react";
+import { Search, Github, Code, Bug, Lightbulb, FileText, Send, Sparkles, AlertCircle, Copy, Check, Trash2, RefreshCcw } from "lucide-react";
 import { AnalysisResult } from "@/lib/types";
 
 export default function Home() {
@@ -11,6 +11,20 @@ export default function Home() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"bugs" | "suggestions" | "docs">("bugs");
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const copyToClipboard = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleClear = () => {
+    setInput("");
+    setGithubUrl("");
+    setResult(null);
+    setError(null);
+  };
 
   const handleAnalyze = async () => {
     if (!input && !githubUrl) {
@@ -95,9 +109,11 @@ export default function Home() {
               onClick={handleAnalyze}
               disabled={loading}
               className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 text-lg font-bold text-white transition-all hover:scale-[1.02] hover:bg-blue-600 active:scale-95 disabled:opacity-50"
-            >
               {loading ? (
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                <div className="flex items-center gap-3 font-medium">
+                  <RefreshCcw className="h-5 w-5 animate-spin" />
+                  Analyzing with AI...
+                </div>
               ) : (
                 <>
                   <Send className="h-5 w-5" />
@@ -105,6 +121,16 @@ export default function Home() {
                 </>
               )}
             </button>
+            
+            {result && (
+              <button
+                onClick={handleClear}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/50 py-3 text-sm font-medium text-zinc-400 transition-all hover:bg-zinc-800 hover:text-white"
+              >
+                <Trash2 className="h-4 w-4" />
+                Clear and Start Over
+              </button>
+            )}
             {error && (
               <div className="mt-4 flex items-center gap-2 rounded-lg bg-red-500/10 p-4 text-red-400 ring-1 ring-red-500/20">
                 <AlertCircle className="h-5 w-5" />
@@ -117,7 +143,7 @@ export default function Home() {
         {/* Results Section */}
         <section className="flex flex-col gap-6">
           {result ? (
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-6 animate-fade-in">
               {/* Overall Rating */}
               <div className="glass flex items-center justify-between rounded-2xl p-6">
                 <div>
@@ -172,9 +198,21 @@ export default function Home() {
                             </div>
                             <p className="mt-2 text-sm text-zinc-400">{bug.description}</p>
                             {bug.fix && (
-                              <div className="mt-4 rounded-lg bg-black p-3 font-mono text-xs">
-                                <p className="mb-2 text-zinc-500">// Fix Recommendation</p>
-                                <pre className="text-green-400 overflow-x-auto">{bug.fix}</pre>
+                              <div className="mt-4 overflow-hidden rounded-lg bg-black ring-1 ring-zinc-800">
+                                <div className="flex items-center justify-between border-b border-zinc-800 bg-zinc-900/50 px-3 py-2">
+                                  <p className="text-[10px] font-bold uppercase text-zinc-500">// Fix Recommendation</p>
+                                  <button 
+                                    onClick={() => copyToClipboard(bug.fix, `bug-${idx}`)}
+                                    className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 hover:text-white"
+                                  >
+                                    {copiedId === `bug-${idx}` ? (
+                                      <><Check className="h-3 w-3 text-green-500" /> Copied!</>
+                                    ) : (
+                                      <><Copy className="h-3 w-3" /> Copy</>
+                                    )}
+                                  </button>
+                                </div>
+                                <pre className="p-3 font-mono text-xs text-green-400 overflow-x-auto">{bug.fix}</pre>
                               </div>
                             )}
                           </div>
@@ -227,7 +265,19 @@ export default function Home() {
                       )}
 
                       <div>
-                        <h4 className="mb-2 text-sm font-bold uppercase text-zinc-500">Usage Example</h4>
+                        <div className="mb-2 flex items-center justify-between">
+                          <h4 className="text-sm font-bold uppercase text-zinc-500">Usage Example</h4>
+                          <button 
+                            onClick={() => copyToClipboard(result.documentation.usage, 'usage')}
+                            className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 hover:text-white"
+                          >
+                            {copiedId === 'usage' ? (
+                              <><Check className="h-3 w-3 text-green-500" /> Copied!</>
+                            ) : (
+                              <><Copy className="h-3 w-3" /> Copy</>
+                            )}
+                          </button>
+                        </div>
                         <div className="rounded-lg bg-black p-3 font-mono text-xs">
                           <pre className="text-blue-400 overflow-x-auto">{result.documentation.usage}</pre>
                         </div>
