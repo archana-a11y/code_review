@@ -11,6 +11,11 @@ function getOpenAIClient() {
     }
     openaiInstance = new OpenAI({
       apiKey: apiKey || "dummy_key",
+      baseURL: "https://openrouter.ai/api/v1",
+      defaultHeaders: {
+        "HTTP-Referer": "https://code-review-dev.vercel.app",
+        "X-Title": "AI Code Reviewer",
+      }
     });
   }
   return openaiInstance;
@@ -46,7 +51,7 @@ export async function analyzeCode(code: string): Promise<AnalysisResult> {
   try {
     const openai = getOpenAIClient();
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "openai/gpt-4o",
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },
     });
