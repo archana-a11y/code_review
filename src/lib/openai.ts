@@ -51,9 +51,10 @@ export async function analyzeCode(code: string): Promise<AnalysisResult> {
   try {
     const openai = getOpenAIClient();
     const response = await openai.chat.completions.create({
-      model: "openai/gpt-4o",
+      model: "google/gemini-2.0-flash-lite-001",
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },
+      max_tokens: 2000,
     });
 
     const content = response.choices[0].message?.content;
