@@ -10,6 +10,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"bugs" | "suggestions" | "docs">("bugs");
 
   const handleAnalyze = async () => {
     if (!input && !githubUrl) {
@@ -132,44 +133,107 @@ export default function Home() {
               {/* Tabs / Result Display */}
               <div className="glass overflow-hidden rounded-2xl">
                 <div className="grid grid-cols-3 border-b border-zinc-800">
-                  <button className="flex items-center justify-center gap-2 border-b-2 border-primary py-4 font-medium">
+                  <button 
+                    onClick={() => setActiveTab("bugs")}
+                    className={`flex items-center justify-center gap-2 py-4 font-medium transition-colors ${activeTab === "bugs" ? "border-b-2 border-primary text-white" : "text-zinc-500 hover:text-white"}`}
+                  >
                     <Bug className="h-4 w-4" /> Bugs
                   </button>
-                  <button className="flex items-center justify-center gap-2 py-4 font-medium text-zinc-500 transition-colors hover:text-white">
+                  <button 
+                    onClick={() => setActiveTab("suggestions")}
+                    className={`flex items-center justify-center gap-2 py-4 font-medium transition-colors ${activeTab === "suggestions" ? "border-b-2 border-primary text-white" : "text-zinc-500 hover:text-white"}`}
+                  >
                     <Lightbulb className="h-4 w-4" /> Suggestions
                   </button>
-                  <button className="flex items-center justify-center gap-2 py-4 font-medium text-zinc-500 transition-colors hover:text-white">
+                  <button 
+                    onClick={() => setActiveTab("docs")}
+                    className={`flex items-center justify-center gap-2 py-4 font-medium transition-colors ${activeTab === "docs" ? "border-b-2 border-primary text-white" : "text-zinc-500 hover:text-white"}`}
+                  >
                     <FileText className="h-4 w-4" /> Docs
                   </button>
                 </div>
 
                 <div className="max-h-[600px] overflow-y-auto p-6">
-                  {/* Bugs List */}
-                  <div className="flex flex-col gap-4">
-                    {result.bugs.length > 0 ? (
-                      result.bugs.map((bug, idx) => (
-                        <div key={idx} className="rounded-xl bg-zinc-900/50 p-4 ring-1 ring-zinc-800">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-bold text-white">{bug.title}</h4>
-                            <span className={`rounded px-2 py-0.5 text-xs font-bold uppercase ${
-                              bug.severity === "high" ? "bg-red-500/20 text-red-500" :
-                              bug.severity === "medium" ? "bg-yellow-500/20 text-yellow-500" :
-                              "bg-blue-500/20 text-blue-500"
-                            }`}>
-                              {bug.severity}
-                            </span>
+                  {/* Content based on active tab */}
+                  {activeTab === "bugs" && (
+                    <div className="flex flex-col gap-4">
+                      {result.bugs.length > 0 ? (
+                        result.bugs.map((bug, idx) => (
+                          <div key={idx} className="rounded-xl bg-zinc-900/50 p-4 ring-1 ring-zinc-800">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-bold text-white">{bug.title}</h4>
+                              <span className={`rounded px-2 py-0.5 text-xs font-bold uppercase ${
+                                bug.severity === "high" ? "bg-red-500/20 text-red-500" :
+                                bug.severity === "medium" ? "bg-yellow-500/20 text-yellow-500" :
+                                "bg-blue-500/20 text-blue-500"
+                              }`}>
+                                {bug.severity}
+                              </span>
+                            </div>
+                            <p className="mt-2 text-sm text-zinc-400">{bug.description}</p>
+                            {bug.fix && (
+                              <div className="mt-4 rounded-lg bg-black p-3 font-mono text-xs">
+                                <p className="mb-2 text-zinc-500">// Fix Recommendation</p>
+                                <pre className="text-green-400 overflow-x-auto">{bug.fix}</pre>
+                              </div>
+                            )}
                           </div>
-                          <p className="mt-2 text-sm text-zinc-400">{bug.description}</p>
-                          <div className="mt-4 rounded-lg bg-black p-3 font-mono text-xs">
-                            <p className="mb-2 text-zinc-500">// Fix Recommendation</p>
-                            <pre className="text-green-400">{bug.fix}</pre>
+                        ))
+                      ) : (
+                        <p className="text-center text-zinc-500 py-12">No bugs found! Great job.</p>
+                      )}
+                    </div>
+                  )}
+
+                  {activeTab === "suggestions" && (
+                    <div className="flex flex-col gap-4">
+                      {result.suggestions.length > 0 ? (
+                        result.suggestions.map((sug, idx) => (
+                          <div key={idx} className="rounded-xl bg-zinc-900/50 p-4 ring-1 ring-zinc-800">
+                            <h4 className="font-bold text-white">{sug.title}</h4>
+                            <p className="mt-2 text-sm text-zinc-400">{sug.description}</p>
+                            <div className="mt-3 flex items-center gap-2 text-xs font-medium text-primary">
+                              <Sparkles className="h-3 w-3" />
+                              <span>Benefit: {sug.benefit}</span>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-center text-zinc-500 py-12">No suggestions. Your code is pretty clean!</p>
+                      )}
+                    </div>
+                  )}
+
+                  {activeTab === "docs" && (
+                    <div className="flex flex-col gap-6">
+                      <div>
+                        <h4 className="mb-2 text-sm font-bold uppercase text-zinc-500">Summary</h4>
+                        <p className="text-zinc-300">{result.documentation.summary}</p>
+                      </div>
+                      
+                      {result.documentation.functions.length > 0 && (
+                        <div>
+                          <h4 className="mb-3 text-sm font-bold uppercase text-zinc-500">Functions</h4>
+                          <div className="flex flex-col gap-4">
+                            {result.documentation.functions.map((fn, idx) => (
+                              <div key={idx} className="rounded-xl bg-zinc-900/50 p-4 ring-1 ring-zinc-800">
+                                <code className="text-primary font-bold">{fn.name}({fn.params})</code>
+                                <p className="mt-2 text-sm text-zinc-400">{fn.description}</p>
+                                <div className="mt-2 text-xs text-zinc-500">Returns: {fn.returns}</div>
+                              </div>
+                            ))}
                           </div>
                         </div>
-                      ))
-                    ) : (
-                      <p className="text-center text-zinc-500 py-12">No bugs found! Great job.</p>
-                    )}
-                  </div>
+                      )}
+
+                      <div>
+                        <h4 className="mb-2 text-sm font-bold uppercase text-zinc-500">Usage Example</h4>
+                        <div className="rounded-lg bg-black p-3 font-mono text-xs">
+                          <pre className="text-blue-400 overflow-x-auto">{result.documentation.usage}</pre>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
