@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Github, Code, Bug, Lightbulb, FileText, Send, Sparkles, AlertCircle, Copy, Check, Trash2, RefreshCcw } from "lucide-react";
+import { Search, Github, Code, Bug, Lightbulb, FileText, Send, Sparkles, AlertCircle, Copy, Check, Trash2, RefreshCcw, History, X, Clock } from "lucide-react";
+import { useState, useEffect } from "react";
 import { AnalysisResult } from "@/lib/types";
 
 export default function Home() {
@@ -12,6 +12,27 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"bugs" | "suggestions" | "docs">("bugs");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [history, setHistory] = useState<{ id: string, date: string, title: string, result: AnalysisResult }[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("review-history");
+    if (saved) {
+      setHistory(JSON.parse(saved));
+    }
+  }, []);
+
+  const saveToHistory = (res: AnalysisResult, title: string) => {
+    const newItem = {
+      id: Date.now().toString(),
+      date: new Date().toLocaleString(),
+      title: title || "Unnamed Review",
+      result: res
+    };
+    const updated = [newItem, ...history].slice(0, 10); // Keep last 10
+    setHistory(updated);
+    localStorage.setItem("review-history", JSON.stringify(updated));
+  };
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -50,6 +71,7 @@ export default function Home() {
       }
 
       setResult(data.result);
+      saveToHistory(data.result, githubUrl || input.slice(0, 30));
     } catch (err: any) {
       setError(err.message || "Something went wrong during analysis");
     } finally {
@@ -58,7 +80,46 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center p-4 md:p-8">
+    <div className="flex min-h-screen flex-col items-center p-4 md:p-8 relative">
+      <button 
+        onClick={() => setShowHistory(true)}
+        className="fixed right-6 top-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-all shadow-xl"
+      >
+        <History className="h-5 w-5" />
+      </button>
+
+      {/* History Sidebar */}
+      <div className={`fixed inset-y-0 right-0 z-50 w-80 bg-zinc-950 border-l border-zinc-800 p-6 transform transition-transform duration-300 ease-in-out shadow-2xl ${showHistory ? "translate-x-0" : "translate-x-full"}`}>
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <Clock className="h-5 w-5 text-primary" /> History
+          </h2>
+          <button onClick={() => setShowHistory(false)} className="text-zinc-500 hover:text-white">
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          {history.length > 0 ? history.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => {
+                setResult(item.result);
+                setShowHistory(false);
+              }}
+              className="text-left p-4 rounded-xl bg-zinc-900/50 border border-zinc-900 hover:border-primary/30 transition-all group"
+            >
+              <p className="text-sm font-bold text-white group-hover:text-primary truncate">{item.title}</p>
+              <p className="text-[10px] text-zinc-500 mt-1">{item.date}</p>
+            </button>
+          )) : (
+            <div className="text-center py-20 opacity-30">
+              <History className="h-12 w-12 mx-auto mb-4" />
+              <p>No history yet</p>
+            </div>
+          )}
+        </div>
+      </div>
       {/* Header */}
       <header className="mb-12 text-center">
         <div className="mb-4 flex justify-center">
@@ -109,6 +170,7 @@ export default function Home() {
               onClick={handleAnalyze}
               disabled={loading}
               className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 text-lg font-bold text-white transition-all hover:scale-[1.02] hover:bg-blue-600 active:scale-95 disabled:opacity-50"
+            >
               {loading ? (
                 <div className="flex items-center gap-3 font-medium">
                   <RefreshCcw className="h-5 w-5 animate-spin" />
