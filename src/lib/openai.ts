@@ -57,13 +57,13 @@ export async function analyzeCode(code: string): Promise<AnalysisResult> {
 
   // Abort the request if it takes longer than 55s (just under Vercel's 60s limit)
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 55000);
+  const timeoutId = setTimeout(() => controller.abort(), 28000);
 
   try {
     const openai = getOpenAIClient();
     const response = await openai.chat.completions.create(
       {
-        model: "google/gemini-2.0-flash-lite-001",
+        model: "openai/gpt-4o-mini",
         messages: [{ role: "user", content: prompt }],
         response_format: { type: "json_object" },
         max_tokens: 2000,

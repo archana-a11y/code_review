@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { fetchGitHubContent } from "@/lib/github";
 import { analyzeCode } from "@/lib/openai";
 
-// Extend Vercel serverless function timeout (max 60s on Hobby plan)
-export const maxDuration = 60;
+// Edge runtime: 30s timeout on Hobby plan (vs 10s for serverless)
+export const runtime = "edge";
+export const maxDuration = 30;
 
 export async function POST(req: Request) {
   try {
