@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Github, Code, Bug, Lightbulb, FileText, Send, Sparkles, AlertCircle, Copy, Check, Trash2, RefreshCcw } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, Github, Code, Bug, Lightbulb, FileText, Send, Sparkles, AlertCircle, Copy, Check, Trash2, RefreshCcw, LogOut } from "lucide-react";
 import { AnalysisResult } from "@/lib/types";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [githubUrl, setGithubUrl] = useState("");
   const [loading, setLoading] = useState(false);
@@ -13,6 +15,23 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"bugs" | "suggestions" | "docs">("bugs");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Auth gate: redirect to /login if not logged in
+  useEffect(() => {
+    const loggedIn = localStorage.getItem("cr_loggedIn");
+    if (!loggedIn) {
+      router.replace("/login");
+    } else {
+      setUserEmail(localStorage.getItem("cr_userEmail"));
+    }
+  }, [router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("cr_loggedIn");
+    localStorage.removeItem("cr_userEmail");
+    localStorage.removeItem("cr_userName");
+    router.replace("/login");
+  };
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -61,19 +80,25 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col items-center p-4 md:p-8">
       {/* Top Navigation */}
-      <nav className="w-full max-w-6xl flex justify-end items-center gap-4 py-2 mb-8">
-        <Link 
-          href="/login" 
-          className="text-sm font-medium text-zinc-400 hover:text-white transition-colors"
-        >
-          Log in
-        </Link>
-        <Link 
-          href="/register" 
-          className="text-sm font-medium bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-lg transition-colors border border-zinc-700"
-        >
-          Sign up
-        </Link>
+      <nav className="w-full max-w-6xl flex justify-between items-center py-2 mb-8">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-primary" />
+          <span className="text-sm font-semibold text-zinc-300">AI Code Reviewer</span>
+        </div>
+        <div className="flex items-center gap-4">
+          {userEmail && (
+            <span className="hidden sm:block text-xs text-zinc-500 bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-full">
+              {userEmail}
+            </span>
+          )}
+          <button
+            id="logout-btn"
+            onClick={handleLogout}
+            className="flex items-center gap-2 text-sm font-medium text-zinc-400 hover:text-red-400 transition-colors"
+          >
+            <LogOut className="h-4 w-4" /> Logout
+          </button>
+        </div>
       </nav>
 
       {/* Header */}

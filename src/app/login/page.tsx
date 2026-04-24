@@ -3,19 +3,30 @@
 import { useState } from "react";
 import { Mail, Lock, LogIn, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
+    if (!email || !password) {
+      setError("Please enter your email and password.");
+      return;
+    }
+
     setLoading(true);
-    // Simulate login process delay
+    // Simulate an auth call
     setTimeout(() => {
-      setLoading(false);
-      window.location.href = "/";
+      localStorage.setItem("cr_loggedIn", "true");
+      localStorage.setItem("cr_userEmail", email);
+      router.push("/");
     }, 1000);
   };
 
@@ -23,16 +34,14 @@ export default function LoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center p-4 md:p-8">
       <div className="w-full max-w-md animate-fade-in">
         <div className="mb-8 flex flex-col items-center text-center">
-          <Link href="/" className="mb-6 flex items-center justify-center transition-transform hover:scale-105">
-            <div className="animate-glow rounded-full bg-blue-500/10 p-4 ring-1 ring-blue-500/20">
-              <Sparkles className="h-8 w-8 text-primary" />
-            </div>
-          </Link>
+          <div className="mb-6 animate-glow rounded-full bg-blue-500/10 p-4 ring-1 ring-blue-500/20">
+            <Sparkles className="h-8 w-8 text-primary" />
+          </div>
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
             Welcome <span className="text-primary">Back</span>
           </h1>
           <p className="mt-2 text-zinc-400">
-            Sign in to continue to AI Code Reviewer.
+            Sign in to access the AI Code Reviewer.
           </p>
         </div>
 
@@ -42,6 +51,7 @@ export default function LoginPage() {
               <label className="text-sm font-medium text-zinc-300">Email Address</label>
               <div className="relative">
                 <input
+                  id="login-email"
                   type="email"
                   required
                   placeholder="name@example.com"
@@ -62,6 +72,7 @@ export default function LoginPage() {
               </div>
               <div className="relative">
                 <input
+                  id="login-password"
                   type="password"
                   required
                   placeholder="••••••••"
@@ -73,7 +84,14 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {error && (
+              <p className="rounded-lg bg-red-500/10 px-4 py-2 text-sm text-red-400 ring-1 ring-red-500/20">
+                {error}
+              </p>
+            )}
+
             <button
+              id="login-submit"
               type="submit"
               disabled={loading}
               className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-base font-bold text-white transition-all hover:scale-[1.02] hover:bg-blue-600 active:scale-95 disabled:opacity-50"
@@ -92,7 +110,7 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-8 text-center text-sm text-zinc-400">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/register" className="font-semibold text-primary hover:underline">
               Create an account
             </Link>

@@ -3,20 +3,36 @@
 import { useState } from "react";
 import { Mail, Lock, User, UserPlus, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
+    if (!name || !email || !password) {
+      setError("Please fill in all fields.");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+
     setLoading(true);
-    // Simulate registration delay
+    // Simulate a registration call
     setTimeout(() => {
-      setLoading(false);
-      window.location.href = "/";
+      localStorage.setItem("cr_loggedIn", "true");
+      localStorage.setItem("cr_userEmail", email);
+      localStorage.setItem("cr_userName", name);
+      router.push("/");
     }, 1000);
   };
 
@@ -24,11 +40,9 @@ export default function RegisterPage() {
     <div className="flex min-h-screen flex-col items-center justify-center p-4 md:p-8">
       <div className="w-full max-w-md animate-fade-in">
         <div className="mb-8 flex flex-col items-center text-center">
-          <Link href="/" className="mb-6 flex items-center justify-center transition-transform hover:scale-105">
-            <div className="animate-glow rounded-full bg-blue-500/10 p-4 ring-1 ring-blue-500/20">
-              <Sparkles className="h-8 w-8 text-primary" />
-            </div>
-          </Link>
+          <div className="mb-6 animate-glow rounded-full bg-blue-500/10 p-4 ring-1 ring-blue-500/20">
+            <Sparkles className="h-8 w-8 text-primary" />
+          </div>
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
             Create <span className="text-primary">Account</span>
           </h1>
@@ -43,6 +57,7 @@ export default function RegisterPage() {
               <label className="text-sm font-medium text-zinc-300">Full Name</label>
               <div className="relative">
                 <input
+                  id="register-name"
                   type="text"
                   required
                   placeholder="John Doe"
@@ -58,6 +73,7 @@ export default function RegisterPage() {
               <label className="text-sm font-medium text-zinc-300">Email Address</label>
               <div className="relative">
                 <input
+                  id="register-email"
                   type="email"
                   required
                   placeholder="name@example.com"
@@ -73,6 +89,7 @@ export default function RegisterPage() {
               <label className="text-sm font-medium text-zinc-300">Password</label>
               <div className="relative">
                 <input
+                  id="register-password"
                   type="password"
                   required
                   placeholder="••••••••"
@@ -84,7 +101,14 @@ export default function RegisterPage() {
               </div>
             </div>
 
+            {error && (
+              <p className="rounded-lg bg-red-500/10 px-4 py-2 text-sm text-red-400 ring-1 ring-red-500/20">
+                {error}
+              </p>
+            )}
+
             <button
+              id="register-submit"
               type="submit"
               disabled={loading}
               className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-base font-bold text-white transition-all hover:scale-[1.02] hover:bg-blue-600 active:scale-95 disabled:opacity-50"
