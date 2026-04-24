@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { fetchGitHubContent } from "@/lib/github";
 import { analyzeCode } from "@/lib/openai";
 
+// Extend Vercel serverless function timeout (max 60s on Hobby plan)
+export const maxDuration = 60;
+
 export async function POST(req: Request) {
   try {
     const { code, githubUrl } = await req.json();

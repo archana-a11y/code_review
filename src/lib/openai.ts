@@ -22,6 +22,13 @@ function getOpenAIClient() {
 }
 
 export async function analyzeCode(code: string): Promise<AnalysisResult> {
+  // Truncate excessively long code to avoid slow/timed-out responses
+  const MAX_CODE_CHARS = 12000;
+  const truncatedCode =
+    code.length > MAX_CODE_CHARS
+      ? code.slice(0, MAX_CODE_CHARS) + "\n\n// [Code truncated for analysis]"
+      : code;
+
   const prompt = `
     Analyze the following code as a senior software engineer.
     Provide a detailed review including:
@@ -45,24 +52,36 @@ export async function analyzeCode(code: string): Promise<AnalysisResult> {
     }
 
     Code to analyze:
-    ${code}
+    ${truncatedCode}
   `;
+
+  // Abort the request if it takes longer than 55s (just under Vercel's 60s limit)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 55000);
 
   try {
     const openai = getOpenAIClient();
-    const response = await openai.chat.completions.create({
-      model: "google/gemini-2.0-flash-lite-001",
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" },
-      max_tokens: 2000,
-    });
+    const response = await openai.chat.completions.create(
+      {
+        model: "google/gemini-2.0-flash-lite-001",
+        messages: [{ role: "user", content: prompt }],
+        response_format: { type: "json_object" },
+        max_tokens: 2000,
+      },
+      { signal: controller.signal }
+    );
 
     const content = response.choices[0].message?.content;
     if (!content) throw new Error("AI returned empty response");
 
     return JSON.parse(content) as AnalysisResult;
   } catch (error: any) {
+    if (error.name === "AbortError") {
+      throw new Error("Analysis timed out. Please try with a shorter code snippet.");
+    }
     console.error("OpenAI Analysis Error:", error);
     throw new Error(`AI Analysis failed: ${error.message}`);
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
