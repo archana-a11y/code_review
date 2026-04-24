@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Search, Github, Code, Bug, Lightbulb, FileText, Send, Sparkles, AlertCircle, Copy, Check, Trash2, RefreshCcw } from "lucide-react";
 import { AnalysisResult } from "@/lib/types";
+import Link from "next/link";
 
 export default function Home() {
   const [input, setInput] = useState("");
@@ -59,6 +60,22 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen flex-col items-center p-4 md:p-8">
+      {/* Top Navigation */}
+      <nav className="w-full max-w-6xl flex justify-end items-center gap-4 py-2 mb-8">
+        <Link 
+          href="/login" 
+          className="text-sm font-medium text-zinc-400 hover:text-white transition-colors"
+        >
+          Log in
+        </Link>
+        <Link 
+          href="/register" 
+          className="text-sm font-medium bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-lg transition-colors border border-zinc-700"
+        >
+          Sign up
+        </Link>
+      </nav>
+
       {/* Header */}
       <header className="mb-12 text-center">
         <div className="mb-4 flex justify-center">
